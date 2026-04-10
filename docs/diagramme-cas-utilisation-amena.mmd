@@ -1,0 +1,61 @@
+flowchart LR
+  %% Diagramme de cas d'utilisation (vue metier)
+
+  actorDonateur[Donateur]
+  actorAssociation[Association]
+  actorLivreur[Livreur]
+  actorAdmin[Admin]
+  actorBeneficiaire[Beneficiaire]
+
+  subgraph Systeme[Amena Platform]
+    ucAuth((S'authentifier))
+    ucConsulterBesoins((Consulter les besoins))
+    ucDonner((Faire un don))
+    ucPayer((Payer la commande de don))
+    ucSuivreDon((Suivre ses dons))
+
+    ucPublierBesoin((Creer et publier un besoin))
+    ucGererMission((Creer une mission de livraison))
+    ucAssigner((Assigner un livreur))
+    ucConfirmer((Confirmer la reception))
+
+    ucRepondreMission((Repondre a une mission))
+    ucMajStatutLivraison((Mettre a jour le statut de livraison))
+    ucDepotPreuve((Deposer une preuve de livraison))
+
+    ucValiderOrg((Valider une organisation))
+    ucModerer((Moderer besoins, dons et litiges))
+    ucVoirKpi((Consulter les KPI))
+
+    ucRecevoirAide((Recevoir une aide))
+    ucConsulterSuivi((Consulter le suivi d'affectation))
+  end
+
+  actorDonateur --- ucAuth
+  actorDonateur --- ucConsulterBesoins
+  actorDonateur --- ucDonner
+  actorDonateur --- ucPayer
+  actorDonateur --- ucSuivreDon
+
+  actorAssociation --- ucAuth
+  actorAssociation --- ucPublierBesoin
+  actorAssociation --- ucGererMission
+  actorAssociation --- ucAssigner
+  actorAssociation --- ucConfirmer
+
+  actorLivreur --- ucAuth
+  actorLivreur --- ucRepondreMission
+  actorLivreur --- ucMajStatutLivraison
+  actorLivreur --- ucDepotPreuve
+
+  actorAdmin --- ucAuth
+  actorAdmin --- ucValiderOrg
+  actorAdmin --- ucModerer
+  actorAdmin --- ucVoirKpi
+
+  actorBeneficiaire --- ucRecevoirAide
+  actorBeneficiaire --- ucConsulterSuivi
+
+  ucDonner -. include .-> ucPayer
+  ucGererMission -. include .-> ucAssigner
+  ucMajStatutLivraison -. include .-> ucDepotPreuve

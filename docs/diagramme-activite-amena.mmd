@@ -1,0 +1,42 @@
+flowchart TD
+  start([Debut]) --> auth{Utilisateur authentifie ?}
+
+  auth -- Non --> login[Se connecter / S'inscrire]
+  login --> auth
+
+  auth -- Oui --> role{Role utilisateur}
+
+  role -->|Donateur| browse[Consulter les besoins]
+  browse --> choose[Selectionner un besoin / panier]
+  choose --> donate[Saisir montant ou articles]
+  donate --> checkout[Valider la commande]
+  checkout --> payment{Paiement reussi ?}
+  payment -- Non --> retry[Reessayer le paiement]
+  retry --> checkout
+  payment -- Oui --> donationOk[Don enregistre]
+  donationOk --> trackDon[Suivre l'affectation]
+
+  role -->|Association| createNeed[Creer ou publier un besoin]
+  createNeed --> requestDelivery[Creer une mission de livraison]
+  requestDelivery --> assignCourier[Assigner un livreur]
+  assignCourier --> waitDelivery[Attendre livraison]
+
+  role -->|Livreur| acceptMission[Accepter la mission]
+  acceptMission --> pickup[Recuperer les articles]
+  pickup --> transit[Transport vers beneficiaire]
+  transit --> proof[Deposer preuve de livraison]
+  proof --> delivered[Marquer mission livree]
+
+  waitDelivery --> confirm{Reception confirmee ?}
+  delivered --> confirm
+  confirm -- Non --> incident[Signaler incident / litige]
+  incident --> adminReview[Admin traite le litige]
+  confirm -- Oui --> closeNeed[Cloturer besoin / mission]
+
+  role -->|Admin| moderation[Moderer organisations, besoins, dons]
+  moderation --> kpi[Consulter KPI]
+
+  trackDon --> finish([Fin])
+  closeNeed --> finish
+  kpi --> finish
+  adminReview --> finish

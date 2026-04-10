@@ -1,0 +1,37 @@
+sequenceDiagram
+  actor Donateur
+  participant Web as Web/Mobile App
+  participant API as Backend API
+  participant DB as Base de donnees
+  participant Pay as Service Paiement
+  actor Association
+  actor Livreur
+
+  Donateur->>Web: Choisir besoin et montant
+  Web->>API: POST /checkout
+  API->>DB: Creer DonationOrder (pending)
+  API-->>Web: orderId + paymentIntent
+
+  Web->>Pay: Confirmer paiement
+  Pay-->>API: Webhook paiement_succeeded
+  API->>DB: MAJ PaymentTransaction = succeeded
+  API->>DB: MAJ DonationOrder = paid
+  API-->>Web: Paiement confirme
+
+  Association->>API: POST /missions (orderId)
+  API->>DB: Creer DeliveryMission (pending)
+  API-->>Association: Mission creee
+
+  Livreur->>API: POST /missions/:id/accept
+  API->>DB: MAJ mission = accepted
+  API-->>Association: Livreur assigne
+
+  Livreur->>API: POST /missions/:id/proof
+  API->>DB: Enregistrer preuve
+  Livreur->>API: PATCH /missions/:id/status delivered
+  API->>DB: MAJ mission = delivered
+  API-->>Association: Livraison terminee
+
+  Association->>API: PATCH /missions/:id/status confirmed
+  API->>DB: MAJ mission = confirmed
+  API-->>Donateur: Don livre et confirme
