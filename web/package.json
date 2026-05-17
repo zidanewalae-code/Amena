@@ -1,24 +1,22 @@
 {
-  "name": "amena-web",
-  "version": "1.0.0",
+  "name": "amena-frontend",
   "private": true,
+  "version": "1.0.0",
+  "type": "module",
   "scripts": {
-    "start": "next dev",
-    "build": "next build",
-    "serve": "next start",
-    "test:e2e": "playwright test",
-    "test:e2e:orchestrated": "node scripts/e2e-orchestrated.js"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "jspdf": "^2.5.2",
-    "next": "14.2.5",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "axios": "^1.7.9",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.1",
+    "recharts": "^3.8.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.55.0",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.5.3",
-    "tailwindcss": "^3.4.17"
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.10"
   }
 }

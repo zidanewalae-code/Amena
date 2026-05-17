@@ -1,8 +1,17 @@
-// Shared API base URL helper for web pages.
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+import axios from 'axios';
 
-function apiUrl(path) {
-  return `${API_BASE_URL}${path}`;
-}
+const api = axios.create({
+  baseURL: '/api'
+});
 
-export { API_BASE_URL, apiUrl };
+api.interceptors.request.use((config) => {
+  const token = window.localStorage.getItem('amena_token');
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
+export default api;

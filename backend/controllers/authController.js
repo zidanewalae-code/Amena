@@ -1,34 +1,35 @@
-// Handles registration and login flows with simple validation and JWT issuance.
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
-
-const { User, Organization, Beneficiary, Profile } = require('../models');
-
-const allowedRoles = ['donor', 'organization', 'beneficiary', 'company', 'courier', 'admin'];
+const { User } = require('../models');
+const { hashPassword, comparePassword, assignRole, detectRole } = require('./userController');
 
 function buildToken(user) {
   return jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
-    process.env.JWT_SECRET,
+    {
+      user_id: user.user_id,
+      email: user.email,
+      role: user.role || 'donator'
+    },
+    process.env.JWT_SECRET || 'amena-dev-secret',
     { expiresIn: '1d' }
   );
 }
 
 async function register(req, res) {
   try {
-    const { full_name, email, password, role, phone } = req.body;
+    const { name, email, password, phone, role: requestedRole } = req.body;
+    const role = requestedRole || 'donator';
+    const allowedRoles = ['donator', 'organization', 'delivery_person'];
 
-    if (!full_name || !email || !password || !role) {
-      return res.status(400).json({ message: 'full_name, email, password and role are required' });
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'name, email and password are required' });
+    }
+
+    if (role === 'admin') {
+      return res.status(403).json({ message: 'Forbidden: admin registration is not allowed' });
     }
 
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({ message: 'Invalid role value' });
-    }
-
-    if (password.length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters' });
     }
 
     const existing = await User.findOne({ where: { email } });
@@ -36,41 +37,18 @@ async function register(req, res) {
       return res.status(409).json({ message: 'Email already exists' });
     }
 
-    const password_hash = await bcrypt.hash(password, 10);
-    const user = await User.create({ full_name, email, password_hash, role, phone });
-
-    await Profile.create({
-      user_id: user.id,
-      trust_score: 0,
-      role_metadata: {}
-    });
-
-    if (role === 'organization') {
-      await Organization.create({
-        user_id: user.id,
-        legal_name: full_name,
-        verified_status: 'pending'
-      });
-    }
-
-    if (role === 'beneficiary') {
-      await Beneficiary.create({
-        user_id: user.id,
-        vulnerability_level: 'medium'
-      });
-    }
-
-    const token = buildToken(user);
+    const user = await User.create({ name, email, password: await hashPassword(password), phone });
+    await assignRole(user.user_id, role, req.body);
 
     return res.status(201).json({
       message: 'User registered successfully',
-      token,
+      token: buildToken({ ...user.get({ plain: true }), role }),
       user: {
-        id: user.id,
-        full_name: user.full_name,
+        user_id: user.user_id,
+        name: user.name,
         email: user.email,
-        role: user.role,
-        phone: user.phone
+        phone: user.phone,
+        role
       }
     });
   } catch (error) {
@@ -91,22 +69,22 @@ async function login(req, res) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password_hash);
+    const isMatch = await comparePassword(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const token = buildToken(user);
+    const role = (await detectRole(user.user_id)) || 'donator';
 
     return res.status(200).json({
       message: 'Login successful',
-      token,
+      token: buildToken({ ...user.get({ plain: true }), role }),
       user: {
-        id: user.id,
-        full_name: user.full_name,
+        user_id: user.user_id,
+        name: user.name,
         email: user.email,
-        role: user.role,
-        phone: user.phone
+        phone: user.phone,
+        role
       }
     });
   } catch (error) {

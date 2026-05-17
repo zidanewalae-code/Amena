@@ -1,4 +1,3 @@
-// Routes for authentication actions such as register and login.
 const express = require('express');
 const { register, login, logout } = require('../controllers/authController');
 const authMiddleware = require('../middleware/authMiddleware');
