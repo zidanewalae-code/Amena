@@ -15,9 +15,25 @@ const historyRoutes = require('./routes/historyRoutes');
 
 const app = express();
 
+const defaultCorsOrigins = [
+	'http://localhost:3000',
+	'http://localhost:4173',
+	'http://localhost:5173',
+	'http://127.0.0.1:3000',
+	'http://127.0.0.1:4173',
+	'http://127.0.0.1:5173'
+];
+
+const configuredCorsOrigins = (process.env.CORS_ORIGIN || '')
+	.split(',')
+	.map((origin) => origin.trim())
+	.filter(Boolean);
+
+const allowedCorsOrigins = [...new Set([...configuredCorsOrigins, ...defaultCorsOrigins])];
+
 app.use(
 	cors({
-		origin: (process.env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:5173').split(','),
+		origin: allowedCorsOrigins,
 		credentials: false
 	})
 );
