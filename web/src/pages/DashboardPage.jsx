@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Bar,
@@ -272,45 +272,66 @@ function DashboardContent({ role }) {
   const [notice, setNotice] = useState(null);
   const [search, setSearch] = useState('');
   const [pages, setPages] = useState({});
+  const loadAbortRef = useRef(null);
+  const loadVersionRef = useRef(0);
 
   const loadAll = useCallback(async () => {
+    const nextVersion = loadVersionRef.current + 1;
+    loadVersionRef.current = nextVersion;
+
+    if (loadAbortRef.current) {
+      loadAbortRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    loadAbortRef.current = controller;
+
     setLoading(true);
     setNotice(null);
 
-    const settled = await Promise.allSettled(
-      sections.map(async (section) => {
-        const response = await api.get(section.endpoint);
-        return [section.key, Array.isArray(response.data) ? response.data : []];
-      })
-    );
+    try {
+      const settled = await Promise.allSettled(
+        sections.map(async (section) => {
+          const response = await api.get(section.endpoint, { signal: controller.signal });
+          return [section.key, Array.isArray(response.data) ? response.data : []];
+        })
+      );
 
-    const nextData = {};
-    let hadError = false;
-
-    settled.forEach((result, index) => {
-      const section = sections[index];
-
-      if (result.status === 'fulfilled') {
-        const [key, value] = result.value;
-        nextData[key] = [...value].sort((left, right) => {
-          const leftDate = new Date(getItemDate(left, key) || 0).getTime();
-          const rightDate = new Date(getItemDate(right, key) || 0).getTime();
-          return rightDate - leftDate;
-        });
-      } else if (section) {
-        nextData[section.key] = [];
-        hadError = true;
+      if (loadVersionRef.current !== nextVersion || controller.signal.aborted) {
+        return;
       }
-    });
 
-    setData(nextData);
-    setLoading(false);
-    setNotice({
-      type: hadError ? 'warning' : 'success',
-      message: hadError
-        ? 'Some dashboard data could not be loaded. Showing the available records.'
-        : 'Dashboard refreshed with the latest data.'
-    });
+      const nextData = {};
+      let hadError = false;
+
+      settled.forEach((result, index) => {
+        const section = sections[index];
+
+        if (result.status === 'fulfilled') {
+          const [key, value] = result.value;
+          nextData[key] = [...value].sort((left, right) => {
+            const leftDate = new Date(getItemDate(left, key) || 0).getTime();
+            const rightDate = new Date(getItemDate(right, key) || 0).getTime();
+            return rightDate - leftDate;
+          });
+        } else if (section) {
+          nextData[section.key] = [];
+          hadError = true;
+        }
+      });
+
+      setData(nextData);
+      setNotice({
+        type: hadError ? 'warning' : 'success',
+        message: hadError
+          ? 'Some dashboard data could not be loaded. Showing the available records.'
+          : 'Dashboard refreshed with the latest data.'
+      });
+    } finally {
+      if (loadVersionRef.current === nextVersion) {
+        setLoading(false);
+      }
+    }
   }, [sections]);
 
   useEffect(() => {
@@ -388,6 +409,10 @@ function DashboardContent({ role }) {
   const meta = ROLE_META[role] || ROLE_META.donator;
 
   function handleRefresh() {
+    if (loading) {
+      return;
+    }
+
     loadAll();
   }
 
@@ -418,7 +443,7 @@ function DashboardContent({ role }) {
             />
           </label>
           <div className="button-row wrap">
-            <button className="primary-button" type="button" onClick={handleRefresh}>
+            <button className="primary-button" type="button" onClick={handleRefresh} disabled={loading}>
               Refresh dashboard
             </button>
             {config.quickLinks.slice(0, 2).map((link) => (
