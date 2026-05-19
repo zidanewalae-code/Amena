@@ -253,8 +253,8 @@ function renderChart(analytics) {
   );
 }
 
-function getItemKey(sectionKey, item) {
-  return `${sectionKey}-${item.product_id || item.don_id || item.order_id || item.payment_id || item.notification_id || item.alert_id || item.history_id || item.category_id || item.email || item.name || item.title || item.message || 'row'}`;
+function getItemKey(sectionKey, item, index) {
+  return `${sectionKey}-${item.product_id || item.don_id || item.order_id || item.payment_id || item.notification_id || item.alert_id || item.history_id || item.category_id || item.email || item.name || item.title || item.message || 'row'}-${index}`;
 }
 
 export default function DashboardPage({ role }) {
@@ -263,9 +263,18 @@ export default function DashboardPage({ role }) {
 
 function DashboardContent({ role }) {
   const { user } = useAuth();
-  const config = getDashboardConfig(role);
-  const sections = getDashboardSections(role);
-  const stats = getDashboardStats(role);
+  const config = useMemo(() => getDashboardConfig(role), [role]);
+  const sections = useMemo(() => getDashboardSections(role), [role]);
+  const stats = useMemo(() => getDashboardStats(role), [role]);
+  const modules = useMemo(() => {
+    const next = new Map();
+    [...stats, ...sections].forEach((section) => {
+      if (section?.key) {
+        next.set(section.key, section);
+      }
+    });
+    return [...next.values()];
+  }, [sections, stats]);
 
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(true);
@@ -291,7 +300,7 @@ function DashboardContent({ role }) {
 
     try {
       const settled = await Promise.allSettled(
-        sections.map(async (section) => {
+        modules.map(async (section) => {
           const response = await api.get(section.endpoint, { signal: controller.signal });
           return [section.key, Array.isArray(response.data) ? response.data : []];
         })
@@ -305,7 +314,7 @@ function DashboardContent({ role }) {
       let hadError = false;
 
       settled.forEach((result, index) => {
-        const section = sections[index];
+        const section = modules[index];
 
         if (result.status === 'fulfilled') {
           const [key, value] = result.value;
@@ -332,7 +341,7 @@ function DashboardContent({ role }) {
         setLoading(false);
       }
     }
-  }, [sections]);
+  }, [modules]);
 
   useEffect(() => {
     loadAll();
@@ -541,11 +550,11 @@ function DashboardContent({ role }) {
                   }
                 >
                   <div className="list-stack compact">
-                    {pagedItems.map((item) => {
+                    {pagedItems.map((item, index) => {
                       const badge = getBadge(section.key, item);
 
                       return (
-                        <div key={getItemKey(section.key, item)} className="list-row dashboard-row">
+                        <div key={getItemKey(section.key, item, index)} className="list-row dashboard-row">
                           <div>
                             <div className="row-heading">
                               <strong>{getSectionItemTitle(section.key, item)}</strong>

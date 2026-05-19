@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 5000;
 async function bootstrap() {
   try {
     await sequelize.authenticate();
-    console.log('MariaDB connection successful.');
+    console.log(`${sequelize.getDialect()} connection successful.`);
 
     await sequelize.sync();
     console.log('Sequelize models synchronized.');

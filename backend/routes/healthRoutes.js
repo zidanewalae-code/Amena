@@ -5,6 +5,5 @@ const router = express.Router();
 
 router.get('/health', health);
 router.get('/', health);
-router.get('/', health);
 
 module.exports = router;

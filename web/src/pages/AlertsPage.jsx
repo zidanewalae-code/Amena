@@ -56,9 +56,14 @@ function AlertsContent() {
 
     try {
       const payload = {
-        ...form,
-        organization_id: Number(form.organization_id)
+        title: form.title,
+        description: form.description,
+        priority: form.priority
       };
+
+      if (!editingId || user?.role === 'admin') {
+        payload.organization_id = Number(form.organization_id);
+      }
 
       if (editingId) {
         await api.put(`/alerts/${editingId}`, payload);

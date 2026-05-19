@@ -100,7 +100,7 @@ const dashboardRoleConfig = {
   admin: {
     title: 'Admin Dashboard',
     subtitle: 'Global operational overview for administrators.',
-    stats: ['users', 'orders', 'payments', 'alerts'],
+    stats: ['users', 'dons', 'orders', 'products', 'payments', 'alerts'],
     sections: ['users', 'orders', 'payments', 'alerts'],
     quickLinks: [
       { to: '/orders', label: 'Manage orders' },

@@ -1,14 +1,32 @@
 import React from 'react';
 
 export default function StatCard({ label, value, hint, icon, trend, tone = 'default' }) {
+  // Support both legacy string trend and structured { direction, label }
+  let trendObj = null;
+
+  if (trend) {
+    if (typeof trend === 'string') {
+      const direction = String(trend).trim().startsWith('-') ? 'down' : 'up';
+      trendObj = { direction, label: trend };
+    } else if (typeof trend === 'object') {
+      trendObj = trend;
+    }
+  }
+
+  const displayValue = typeof value === 'number' ? value.toLocaleString() : value;
+
   return (
     <article className={`stat-card tone-${tone}`}>
       <div className="stat-topline">
         {icon ? <span className="stat-icon">{icon}</span> : null}
-        {trend ? <span className="trend-pill">{trend}</span> : null}
+        {trendObj ? (
+          <span className={`trend-pill ${trendObj.direction === 'up' ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'} px-2 py-0.5 rounded text-xs font-medium`}>
+            {trendObj.direction === 'up' ? '↑' : '↓'} {trendObj.label}
+          </span>
+        ) : null}
       </div>
       <span className="stat-label">{label}</span>
-      <strong className="stat-value">{value}</strong>
+      <strong className="stat-value">{displayValue}</strong>
       {hint ? <p>{hint}</p> : null}
     </article>
   );

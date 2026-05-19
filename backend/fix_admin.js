@@ -4,8 +4,11 @@ const http = require('http');
 
 async function run() {
   try {
-    let user = await User.findOne({ 
-      where: { email: 'admin@amena.tn' },
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@amena.com';
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin123!';
+
+    let user = await User.findOne({
+      where: { email: ADMIN_EMAIL },
       include: [{ model: Admin, as: 'adminProfile' }]
     });
 
@@ -17,11 +20,13 @@ async function run() {
     }
 
     if (!user || !user.adminProfile) {
-      const hashedPassword = await bcrypt.hash('secret123', 10);
+      const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@amena.com';
+      const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin123!';
+      const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 10);
       if (!user) {
         user = await User.create({
           name: 'Admin',
-          email: 'admin@amena.tn',
+          email: ADMIN_EMAIL,
           password: hashedPassword
         });
         console.log('Created new user.');
@@ -38,21 +43,21 @@ async function run() {
       console.log('Assigned Admin role.');
       
       // Re-fetch to confirm
-      user = await User.findOne({ 
-        where: { email: 'admin@amena.tn' },
+      user = await User.findOne({
+        where: { email: ADMIN_EMAIL },
         include: [{ model: Admin, as: 'adminProfile' }]
       });
     }
 
     console.log('Final User Details:');
-    console.log('ID:', user.user_id);
-    console.log('Email:', user.email);
-    console.log('Role:', user.adminProfile ? user.adminProfile.role : 'None');
+    console.log('ID:', user?.user_id || 'unknown');
+    console.log('Email:', user?.email || 'unknown');
+    console.log('Role:', user?.adminProfile ? user.adminProfile.role : 'None');
 
     console.log('\nAttempting login...');
     const data = JSON.stringify({
-      email: 'admin@amena.tn',
-      password: 'secret123'
+      email: ADMIN_EMAIL,
+      password: ADMIN_PASSWORD
     });
 
     const options = {
