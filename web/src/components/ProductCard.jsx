@@ -1,5 +1,11 @@
 import React from 'react';
 
+function getStockTone(quantity) {
+  if (quantity <= 5) return 'danger';
+  if (quantity <= 20) return 'warning';
+  return 'success';
+}
+
 export default function ProductCard({
   product,
   onEdit,
@@ -8,20 +14,27 @@ export default function ProductCard({
   onAddToCart,
   onDonate
 }) {
+  const stockTone = getStockTone(Number(product.quantity ?? 0));
+
   return (
     <article className="list-card product-card">
       <div className="product-image">
         <img
+          className="product-image-element"
           src={product.image || 'https://via.placeholder.com/150?text=No+Image'}
           alt={product.name}
-          width="120"
-          style={{ objectFit: 'cover', borderRadius: '8px' }}
         />
       </div>
 
       <div className="product-content">
         <div className="product-top">
-          <h3>{product.name}</h3>
+          <div>
+            <span className="section-badge">Product</span>
+            <h3>{product.name}</h3>
+          </div>
+          <span className={`status-chip tone-${stockTone}`}>
+            {stockTone === 'danger' ? 'Low stock' : stockTone === 'warning' ? 'Medium stock' : 'In stock'}
+          </span>
         </div>
 
         <p className="product-info">
@@ -32,22 +45,16 @@ export default function ProductCard({
           Expiration date: {product.expiration_date || 'No expiration'}
         </p>
 
-        <div className="product-actions">
-         <button
-  className="primary-button"
-  type="button"
-  onClick={() => onDonate(product)}
->
-  Donate
-</button>
+        {product.category?.name ? <p className="product-info">Category: {product.category.name}</p> : null}
 
-<button
-  className="ghost-button"
-  type="button"
-  onClick={() => onAddToCart(product)}
->
-  Add to cart
-</button>
+        <div className="product-actions">
+          <button className="primary-button" type="button" onClick={() => onDonate(product)}>
+            Donate
+          </button>
+
+          <button className="ghost-button" type="button" onClick={() => onAddToCart(product)}>
+            Add to cart
+          </button>
           {canEdit ? (
             <>
               <button

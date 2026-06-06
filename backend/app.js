@@ -31,12 +31,8 @@ const configuredCorsOrigins = (process.env.CORS_ORIGIN || '')
 
 const allowedCorsOrigins = [...new Set([...configuredCorsOrigins, ...defaultCorsOrigins])];
 
-app.use(
-	cors({
-		origin: allowedCorsOrigins,
-		credentials: false
-	})
-);
+app.use(cors({ origin: true, credentials: false }));
+app.options('*', cors({ origin: true, credentials: false }));
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 

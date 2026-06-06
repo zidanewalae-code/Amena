@@ -16,6 +16,7 @@ export default function RegisterPage() {
   const { login } = useAuth();
   const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', role: 'donator' });
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -36,46 +37,100 @@ export default function RegisterPage() {
   }
 
   return (
-    <Layout title="Register" subtitle="Create a simple account and choose your profile type.">
-      <section className="card auth-card">
-        <form className="form-grid" onSubmit={handleSubmit}>
-          <label>
-            <span>Name</span>
-            <input name="name" value={form.name} onChange={handleChange} />
-          </label>
-          <label>
-            <span>Email</span>
-            <input name="email" type="email" value={form.email} onChange={handleChange} />
-          </label>
-          <label>
-            <span>Password</span>
-            <input name="password" type="password" value={form.password} onChange={handleChange} />
-          </label>
-          <label>
-            <span>Phone</span>
-            <input name="phone" value={form.phone} onChange={handleChange} />
-          </label>
-          <label>
-            <span>Role</span>
-            <select name="role" value={form.role} onChange={handleChange}>
-              {registrationRoles.map((role) => (
-                <option key={role.value} value={role.value}>
-                  {role.label}
-                </option>
-              ))}
-            </select>
-          </label>
+    <Layout title="Register" subtitle="Create your AMENA account and choose your role.">
+      <section className="public-auth-layout">
+        <article className="public-auth-aside card">
+          <span className="section-badge">Create account</span>
+          <h2>Rejoignez une expérience plus fluide.</h2>
+          <p>
+            Créez votre profil en quelques instants et activez un espace de travail adapté à votre mission au sein de
+            la plateforme.
+          </p>
 
-          {error ? <p className="inline-message error">{error}</p> : null}
+          <div className="auth-highlight-list auth-progress-list">
+            <div>
+              <strong>1. Profil</strong>
+              <p>Vos informations de base.</p>
+            </div>
+            <div>
+              <strong>2. Accès</strong>
+              <p>Vos identifiants de connexion.</p>
+            </div>
+            <div>
+              <strong>3. Rôle</strong>
+              <p>Votre périmètre d’action dans la plateforme.</p>
+            </div>
+          </div>
+        </article>
 
-          <button className="primary-button" type="submit">
-            Register
-          </button>
-        </form>
+        <section className="card auth-card public-auth-card">
+          <div className="card-header">
+            <div>
+              <span className="section-badge">Inscription</span>
+              <h2>Créer un compte</h2>
+              <p>Un formulaire plus structuré pour rejoindre l’espace AMENA avec le bon rôle dès le départ.</p>
+            </div>
+          </div>
 
-        <p className="card-note">
-          Already have an account? <Link to="/login">Login</Link>
-        </p>
+          <form className="form-grid auth-form" onSubmit={handleSubmit}>
+            <label>
+              <span>Name</span>
+              <input name="name" value={form.name} onChange={handleChange} autoComplete="name" />
+            </label>
+
+            <label>
+              <span>Email</span>
+              <input name="email" type="email" value={form.email} onChange={handleChange} autoComplete="email" />
+            </label>
+
+            <label className="password-field">
+              <span>Password</span>
+              <div className="password-control">
+                <input
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={handleChange}
+                  autoComplete="new-password"
+                />
+                <button
+                  className="password-toggle"
+                  type="button"
+                  onClick={() => setShowPassword((current) => !current)}
+                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
+            </label>
+
+            <label>
+              <span>Phone</span>
+              <input name="phone" value={form.phone} onChange={handleChange} autoComplete="tel" />
+            </label>
+
+            <label>
+              <span>Role</span>
+              <select name="role" value={form.role} onChange={handleChange}>
+                {registrationRoles.map((role) => (
+                  <option key={role.value} value={role.value}>
+                    {role.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {error ? <p className="inline-message error">{error}</p> : null}
+
+            <button className="primary-button" type="submit">
+              Register
+            </button>
+          </form>
+
+          <p className="card-note">
+            Already have an account? <Link to="/login">Login</Link>
+          </p>
+        </section>
       </section>
     </Layout>
   );

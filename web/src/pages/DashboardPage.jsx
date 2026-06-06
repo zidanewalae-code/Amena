@@ -17,6 +17,7 @@ import {
 import Layout from '../components/Layout';
 import DashboardCard from '../components/DashboardCard';
 import StatCard from '../components/StatCard';
+import { EmptyState } from '../components/UIStates';
 import api from '../lib/api';
 import { useAuth } from '../lib/auth';
 import {
@@ -253,6 +254,48 @@ function renderChart(analytics) {
   );
 }
 
+function getRecentItems(data, limit = 3) {
+  return ['alerts', 'payments', 'orders']
+    .flatMap((key) => (data[key] || []).slice(0, limit).map((item) => ({ key, item })))
+    .slice(0, limit * 3);
+}
+
+function ActivityCard({ title, items, toneResolver }) {
+  return (
+    <article className="card activity-card">
+      <div className="card-header">
+        <div>
+          <span className="section-badge">Activity</span>
+          <h2>{title}</h2>
+          <p>Latest operational items pulled from the current dashboard scope.</p>
+        </div>
+      </div>
+
+      {items.length ? (
+        <div className="list-stack compact">
+          {items.map((entry, index) => {
+            const badge = getBadge(entry.key, entry.item);
+
+            return (
+              <div key={`${entry.key}-${index}`} className="list-row dashboard-row activity-row">
+                <div>
+                  <div className="row-heading">
+                    <strong>{getSectionItemTitle(entry.key, entry.item)}</strong>
+                    <span className={`status-chip tone-${badge.tone}`}>{toneResolver ? toneResolver(entry) : badge.label}</span>
+                  </div>
+                  <p>{getSectionDescription(entry.key)}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <EmptyState title="No recent activity" description="Activity will appear here as new records are created." />
+      )}
+    </article>
+  );
+}
+
 function getItemKey(sectionKey, item, index) {
   return `${sectionKey}-${item.product_id || item.don_id || item.order_id || item.payment_id || item.notification_id || item.alert_id || item.history_id || item.category_id || item.email || item.name || item.title || item.message || 'row'}-${index}`;
 }
@@ -415,6 +458,8 @@ function DashboardContent({ role }) {
     };
   }, [data, monthlySeries, role, sections]);
 
+  const recentItems = useMemo(() => getRecentItems(data), [data]);
+
   const meta = ROLE_META[role] || ROLE_META.donator;
 
   function handleRefresh() {
@@ -436,7 +481,7 @@ function DashboardContent({ role }) {
     <Layout title={config.title} subtitle={`${config.subtitle} Connected as ${user?.name || 'current user'}.`}>
       <section className={`dashboard-banner tone-${meta.accent}`}>
         <div>
-          <p className="eyebrow">{meta.label}</p>
+          <p className="eyebrow">Cockpit</p>
           <h2>{config.subtitle}</h2>
           <p>{`${sections.length} visible modules · ${stats.length} KPI cards · role scoped analytics`}</p>
         </div>
@@ -470,6 +515,32 @@ function DashboardContent({ role }) {
 
       {!loading ? (
         <>
+          <section className="dashboard-hero-grid">
+            <article className="card dashboard-hero-card">
+              <div className="card-header">
+                <div>
+                  <span className="section-badge">Overview</span>
+                  <h2>{config.title}</h2>
+                  <p>{config.subtitle}</p>
+                </div>
+              </div>
+
+              <div className="button-row wrap">
+                {config.quickLinks.map((link) => (
+                  <Link key={link.to} className="ghost-button" to={link.to}>
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </article>
+
+            <article className="card dashboard-hero-card dashboard-hero-meta">
+              <span className="section-badge">Scope</span>
+              <h2>{meta.label}</h2>
+              <p>Premium cockpit view with clear KPIs, trends, and operational activity for the current role.</p>
+            </article>
+          </section>
+
           <section className="grid-4">
             {stats.map((stat) => {
               const items = data[stat.key] || [];
@@ -496,7 +567,7 @@ function DashboardContent({ role }) {
               <div className="card-header">
                 <div>
                   <span className="section-badge">Trends</span>
-                  <h2>Monthly activity</h2>
+                  <h2>Donations and orders</h2>
                   <p>Six-month trend across the currently visible dashboard modules.</p>
                 </div>
               </div>
@@ -513,6 +584,21 @@ function DashboardContent({ role }) {
               </div>
               {renderChart(roleAnalytics)}
             </article>
+          </section>
+
+          <section className="grid-3">
+            <ActivityCard
+              title="Recent alerts"
+              items={recentItems.filter((entry) => entry.key === 'alerts').slice(0, 3)}
+            />
+            <ActivityCard
+              title="Recent payments"
+              items={recentItems.filter((entry) => entry.key === 'payments').slice(0, 3)}
+            />
+            <ActivityCard
+              title="Recent orders"
+              items={recentItems.filter((entry) => entry.key === 'orders').slice(0, 3)}
+            />
           </section>
 
           <section className="dashboard-grid">
@@ -563,7 +649,7 @@ function DashboardContent({ role }) {
 <p>{section.summary(item)}</p>
 
 {section.key === 'orders' ? (
-  <div style={{ marginTop: '10px' }}>
+  <div className="order-details">
     <p><strong>Customer:</strong> {item.customer_name || '-'}</p>
     <p><strong>Phone:</strong> {item.phone || '-'}</p>
     <p><strong>Address:</strong> {item.address || '-'}</p>

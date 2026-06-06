@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import api from '../lib/api';
+import { EmptyState, LoadingState } from './UIStates';
+
+const PAGE_SIZE = 8;
 
 const emptyState = (fields) => fields.reduce((acc, field) => ({ ...acc, [field.name]: '' }), {});
 
@@ -19,6 +22,7 @@ export default function CrudTable({
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [page, setPage] = useState(0);
 
   const fieldNames = useMemo(() => fields.map((field) => field.name), [fields]);
 
@@ -38,6 +42,10 @@ export default function CrudTable({
 
   useEffect(() => {
     loadItems();
+  }, [endpoint]);
+
+  useEffect(() => {
+    setPage(0);
   }, [endpoint]);
 
   function resetForm() {
@@ -93,6 +101,9 @@ export default function CrudTable({
   }
 
   const rows = transformRow ? items.map(transformRow) : items;
+  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount - 1);
+  const visibleRows = rows.slice(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE);
 
   return (
     <section className="card">
@@ -147,11 +158,14 @@ export default function CrudTable({
 
       <div className="table-wrap">
         {loading ? (
-          <p className="empty-state">Loading...</p>
+          <LoadingState label="Loading records…" compact />
         ) : rows.length === 0 ? (
-          <p className="empty-state">No records found.</p>
+          <EmptyState
+            title="No records yet"
+            description="Create the first record to populate this table."
+          />
         ) : (
-          <table>
+          <table className="data-table">
             <thead>
               <tr>
                 {columns.map((column) => (
@@ -161,7 +175,7 @@ export default function CrudTable({
               </tr>
             </thead>
             <tbody>
-              {rows.map((item) => (
+              {visibleRows.map((item) => (
                 <tr key={item.id}>
                   {columns.map((column) => (
                     <td key={column.key}>{column.render ? column.render(item) : item[column.key]}</td>
@@ -182,6 +196,22 @@ export default function CrudTable({
           </table>
         )}
       </div>
+
+      {rows.length > PAGE_SIZE ? (
+        <div className="table-pagination">
+          <span className="meta-line">
+            Page {currentPage + 1} of {pageCount}
+          </span>
+          <div className="row-actions">
+            <button className="ghost-button" type="button" onClick={() => setPage((current) => Math.max(0, current - 1))} disabled={currentPage === 0}>
+              Prev
+            </button>
+            <button className="ghost-button" type="button" onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))} disabled={currentPage >= pageCount - 1}>
+              Next
+            </button>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

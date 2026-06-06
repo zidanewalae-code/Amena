@@ -2,12 +2,13 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { canAccessRoute, getDashboardPath } from '../lib/access';
+import { LoadingState } from './UIStates';
 
 export default function ProtectedRoute({ children, roles, redirectTo }) {
   const { ready, isAuthed, user } = useAuth();
 
   if (!ready) {
-    return <div className="page-loading">Loading...</div>;
+    return <LoadingState label="Loading workspace…" />;
   }
 
   if (!isAuthed) {

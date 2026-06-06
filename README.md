@@ -75,21 +75,25 @@ npm run dev
 
 ## Test Accounts
 
-### Admin
-- Email: admin@amena.com
-- Password: Admin123!
+### Comptes vérifiés localement
 
-### Donator
-- Email: donor@test.com
-- Password: Pass123!
+#### Admin
+- Email: admin@amena.tn
+- Password: secret123
 
-### Organization
-- Email: org@test.com
-- Password: Pass123!
+#### Donator
+- Email: don.rbac.20260517103148@amena.local
+- Password: Test123!
 
-### Delivery Person
-- Email: delivery@test.com
-- Password: Pass123!
+#### Organization
+- Email: org.rbac.20260517103148@amena.local
+- Password: Test123!
+
+#### Delivery Person
+- Email: del.rbac.20260517103148@amena.local
+- Password: Test123!
+
+> `donor1@amena.tn` n’est pas présent dans la base locale actuelle.
 
 ## Project Structure
 

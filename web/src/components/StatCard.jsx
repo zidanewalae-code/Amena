@@ -20,7 +20,7 @@ export default function StatCard({ label, value, hint, icon, trend, tone = 'defa
       <div className="stat-topline">
         {icon ? <span className="stat-icon">{icon}</span> : null}
         {trendObj ? (
-          <span className={`trend-pill ${trendObj.direction === 'up' ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'} px-2 py-0.5 rounded text-xs font-medium`}>
+          <span className={`trend-pill ${trendObj.direction === 'up' ? 'tone-up' : 'tone-down'}`}>
             {trendObj.direction === 'up' ? '↑' : '↓'} {trendObj.label}
           </span>
         ) : null}
