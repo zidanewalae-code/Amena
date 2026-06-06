@@ -45,6 +45,7 @@ CREATE TABLE `Product` (
     name VARCHAR(100) NOT NULL,
     quantity INT NOT NULL,
     expiration_date DATE,
+    image VARCHAR(255),
     category_id INT,
     FOREIGN KEY (category_id) REFERENCES `Category`(category_id) ON DELETE SET NULL
 );

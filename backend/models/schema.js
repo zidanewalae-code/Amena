@@ -67,6 +67,7 @@ const Product = sequelize.define(
     name: { type: DataTypes.STRING(100), allowNull: false },
     quantity: { type: DataTypes.INTEGER, allowNull: false },
     expiration_date: { type: DataTypes.DATEONLY },
+    image: { type: DataTypes.STRING(255), allowNull: true },
     category_id: { type: DataTypes.INTEGER, allowNull: true }
   },
   { tableName: 'Product', timestamps: false }
@@ -111,10 +112,20 @@ const Order = sequelize.define(
     delivery_address: { type: DataTypes.STRING(255) },
     order_date: { type: DataTypes.DATEONLY },
     purchase_id: { type: DataTypes.INTEGER, unique: true },
-    delivery_person_id: { type: DataTypes.INTEGER }
+    delivery_person_id: { type: DataTypes.INTEGER },
+    customer_name: DataTypes.STRING,
+    phone: DataTypes.STRING,
+    address: DataTypes.STRING,
+    city: DataTypes.STRING,
+    payment_method: DataTypes.STRING,
+    organization_id: DataTypes.INTEGER,
+    products: DataTypes.TEXT
   },
   { tableName: 'Orders', timestamps: false }
 );
+
+Order.belongsTo(User, { foreignKey: 'organization_id', as: 'organization' });
+User.hasMany(Order, { foreignKey: 'organization_id', as: 'organizationOrders' });
 
 const Payment = sequelize.define(
   'Payment',

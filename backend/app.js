@@ -38,6 +38,7 @@ app.use(
 	})
 );
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 app.use('/api', healthRoutes);
 app.use('/api/auth', authRoutes);

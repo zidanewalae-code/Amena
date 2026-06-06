@@ -1,9 +1,8 @@
 const { Alert, Organization } = require('../models');
 
 function isPublicAlert(alert) {
-  return String(alert?.priority || '').toLowerCase() === 'public';
+  return true;
 }
-
 function canReadAlert(user, alert) {
   if (user.role === 'admin') {
     return true;

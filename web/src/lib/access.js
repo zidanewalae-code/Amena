@@ -115,23 +115,34 @@ const dashboardRoleConfig = {
     allowedPages: ['orders', 'alerts', 'payments', 'profile']
   },
   donator: {
-    title: 'Donator Dashboard',
-    subtitle: 'Track your donations, related orders, and activity.',
-    stats: ['dons', 'orders', 'history'],
-    sections: ['dons', 'orders', 'history'],
-    quickLinks: [
-      { to: '/donations', label: 'Open donations' },
-      { to: '/orders', label: 'Open orders' },
-      { to: '/profile', label: 'Edit profile' }
-    ],
-    sidebarLinks: [
-      { to: '/donations', label: 'Donations' },
-      { to: '/orders', label: 'Orders' },
-      { to: '/history', label: 'History' },
-      { to: '/profile', label: 'Profile' }
-    ],
-    allowedPages: ['donations', 'orders', 'history', 'profile']
-  },
+  title: 'Donator Dashboard',
+  subtitle: 'Track your donations, related orders, and activity.',
+  stats: ['dons', 'orders', 'history'],
+  sections: ['dons', 'orders', 'history'],
+
+  quickLinks: [
+    { to: '/donations', label: 'Open donations' },
+    { to: '/alerts', label: 'View needs' },
+    { to: '/orders', label: 'Open orders' },
+    { to: '/profile', label: 'Edit profile' }
+  ],
+
+  sidebarLinks: [
+    { to: '/donations', label: 'Donations' },
+    { to: '/alerts', label: 'Needs' },
+    { to: '/orders', label: 'Orders' },
+    { to: '/history', label: 'History' },
+    { to: '/profile', label: 'Profile' }
+  ],
+
+  allowedPages: [
+    'donations',
+    'alerts',
+    'orders',
+    'history',
+    'profile'
+  ]
+},
   organization: {
     title: 'Organization Dashboard',
     subtitle: 'Coordinate products, incoming donations, alerts, and operations.',

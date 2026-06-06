@@ -7,7 +7,9 @@ const initialForm = {
   donor_id: '',
   date: '',
   status: 'pending',
-  product_ids: ''
+  product_name: '',
+  quantity: '',
+  image: null
 };
 
 export default function DonationsPage() {
@@ -56,42 +58,46 @@ function DonationsContent() {
   function beginEdit(don) {
     setEditingId(don.don_id);
     setForm({
-      donor_id: String(don.donor_id || user?.user_id || ''),
-      date: don.date || '',
-      status: don.status || 'pending',
-      product_ids: (don.products || []).map((product) => product.product_id).join(', ')
-    });
+  donor_id: String(don.donor_id || user?.user_id || ''),
+  date: don.date || '',
+  status: don.status || 'pending',
+  product_name: don.products?.[0]?.name || '',
+  quantity: don.products?.[0]?.quantity || ''
+});
   }
 
   async function handleSubmit(event) {
-    event.preventDefault();
-    setMessage('');
+  event.preventDefault();
+  setMessage('');
+try {
+  const imageUrl = form.image
+  ? URL.createObjectURL(form.image)
+  : "";
 
-    try {
-      const payload = {
-        donor_id: Number(form.donor_id),
-        date: form.date || null,
-        status: form.status,
-        product_ids: form.product_ids
-          ? form.product_ids
-              .split(',')
-              .map((item) => Number(item.trim()))
-              .filter(Boolean)
-          : []
-      };
+const createdProduct = await api.post('/products', {
+  name: form.product_name,
+  quantity: Number(form.quantity),
+  image: imageUrl
+});
+    const payload = {
+      donor_id: Number(form.donor_id),
+      date: form.date || null,
+      status: form.status,
+      product_ids: [createdProduct.data.product_id]
+    };
 
-      if (editingId) {
-        await api.patch(`/dons/${editingId}`, payload);
-      } else {
-        await api.post('/dons', payload);
-      }
-
-      resetForm();
-      await loadData();
-    } catch (error) {
-      setMessage(error.response?.data?.message || 'Unable to save donation');
+    if (editingId) {
+      await api.patch(`/dons/${editingId}`, payload);
+    } else {
+      await api.post('/dons', payload);
     }
+
+    resetForm();
+    await loadData();
+  } catch (error) {
+    setMessage(error.response?.data?.message || 'Unable to save donation');
   }
+}
 
   async function handleDelete(donId) {
     try {
@@ -120,10 +126,40 @@ function DonationsContent() {
               <input name="status" value={form.status} onChange={handleChange} />
             </label>
             <label>
-              <span>Product IDs</span>
-              <input name="product_ids" value={form.product_ids} onChange={handleChange} placeholder="1, 2, 3" />
-            </label>
+  <span>Product name</span>
+  <input
+    name="product_name"
+    value={form.product_name}
+    onChange={handleChange}
+  />
+</label>
 
+<label>
+  <span>Quantity</span>
+  <input
+    name="quantity"
+    type="number"
+    min="1"
+    value={form.quantity}
+    onChange={handleChange}
+  />
+</label>
+<label>
+  <span>Choose Image</span>
+
+  <input
+    type="file"
+    name="image"
+    accept="image/*"
+    onChange={(e) =>
+      setForm((current) => ({
+        ...current,
+        image: e.target.files[0]
+      }))
+    }
+  />
+</label>
+            
             <div className="form-actions">
               <button className="primary-button" type="submit">
                 {editingId ? 'Update don' : 'Create don'}
@@ -167,10 +203,7 @@ function DonationsContent() {
           ))}
         </div>
 
-        <div className="card subtle-card">
-          <h3>Available products</h3>
-          <p>Use these IDs in the donation form: {products.map((product) => `${product.product_id}:${product.name}`).join(' | ') || 'No products yet'}</p>
-        </div>
+        
       </section>
     </Layout>
   );

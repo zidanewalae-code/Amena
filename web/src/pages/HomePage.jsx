@@ -40,19 +40,21 @@ export default function HomePage() {
       </section>
 
       <section className="grid-3">
-        <article className="card compact-card">
-          <h3>Products</h3>
-          <p>Manage stocked goods and categories with a simple table form.</p>
-        </article>
-        <article className="card compact-card">
-          <h3>Alerts</h3>
-          <p>Create and review organization alerts without extra workflow layers.</p>
-        </article>
-        <article className="card compact-card">
-          <h3>Dashboards</h3>
-          <p>Role-specific pages show dons, orders, payments, notifications, and history.</p>
-        </article>
-      </section>
+  <Link to="/products" className="card compact-card">
+    <h3>Products</h3>
+    <p>Manage stocked goods and categories with a simple table form.</p>
+  </Link>
+
+  <Link to="/alerts" className="card compact-card">
+    <h3>Alerts</h3>
+    <p>Create and review organization alerts without extra workflow layers.</p>
+  </Link>
+
+  <Link to="/dashboard" className="card compact-card">
+    <h3>Dashboards</h3>
+    <p>Role-specific pages show dons, orders, payments, notifications, and history.</p>
+  </Link>
+</section>
     </Layout>
   );
 }

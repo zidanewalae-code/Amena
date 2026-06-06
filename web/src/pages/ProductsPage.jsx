@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
 import api from '../lib/api';
@@ -10,13 +11,19 @@ export default function ProductsPage() {
 
 function ProductsContent() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const canEdit = ['admin', 'organization'].includes(user?.role);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [form, setForm] = useState({ name: '', quantity: '', expiration_date: '', category_id: '' });
-  const [editingId, setEditingId] = useState(null);
+const [form, setForm] = useState({
+  name: '',
+  quantity: '',
+  expiration_date: '',
+  category_id: '',
+  image: ''
+});  const [editingId, setEditingId] = useState(null);
+  const [cart, setCart] = useState([]);
   const [message, setMessage] = useState('');
-
   async function loadData() {
     try {
       const [productsResponse, categoriesResponse] = await Promise.all([api.get('/products'), api.get('/categories')]);
@@ -29,6 +36,8 @@ function ProductsContent() {
 
   useEffect(() => {
     loadData();
+    const savedCart = JSON.parse(localStorage.getItem('cart')) || [];
+    setCart(savedCart);
   }, []);
 
   function handleChange(event) {
@@ -37,8 +46,13 @@ function ProductsContent() {
   }
 
   function resetForm() {
-    setForm({ name: '', quantity: '', expiration_date: '', category_id: '' });
-    setEditingId(null);
+setForm({
+  name: '',
+  quantity: '',
+  expiration_date: '',
+  category_id: '',
+  image: ''
+});    setEditingId(null);
   }
 
   function beginEdit(product) {
@@ -57,10 +71,11 @@ function ProductsContent() {
 
     try {
       const payload = {
-        ...form,
-        quantity: Number(form.quantity),
-        category_id: form.category_id ? Number(form.category_id) : null
-      };
+  ...form,
+  quantity: Number(form.quantity),
+  category_id: form.category_id ? Number(form.category_id) : null,
+  image: form.image
+};
 
       if (editingId) {
         await api.put(`/products/${editingId}`, payload);
@@ -73,6 +88,57 @@ function ProductsContent() {
     } catch (error) {
       setMessage(error.response?.data?.message || 'Unable to save product');
     }
+  }
+
+  function handleAddToCart(product) {
+  const savedCart =
+    JSON.parse(localStorage.getItem("cart")) || [];
+
+  const existingProduct = savedCart.find(
+    (item) => item.product_id === product.product_id
+  );
+
+  let updatedCart;
+
+  if (existingProduct) {
+    updatedCart = savedCart.map((item) =>
+      item.product_id === product.product_id
+        ? { ...item, quantity: item.quantity + 1 }
+        : item
+    );
+  } else {
+    updatedCart = [
+  ...savedCart,
+  {
+    product_id: product.product_id,
+    name: product.name,
+    image: product.image,
+    quantity: 1
+  }
+];
+  }
+
+  localStorage.setItem(
+    "cart",
+    JSON.stringify(updatedCart)
+  );
+
+  setMessage(`${product.name} added to cart`);
+}
+
+  async function handleDonate(product) {
+    const singleProductCart = [
+  {
+    product_id: product.product_id,
+    name: product.name,
+    image: product.image,
+    quantity: 1
+  }
+];
+
+    localStorage.setItem('cart', JSON.stringify(singleProductCart));
+    setCart(singleProductCart);
+    navigate('/checkout');
   }
 
   async function handleDelete(productId) {
@@ -146,6 +212,16 @@ function ProductsContent() {
                   ))}
                 </select>
               </label>
+              <label>
+  <span>Image URL</span>
+  <input
+    name="image"
+    placeholder="https://..."
+    value={form.image}
+    onChange={handleChange}
+  />
+</label>
+              
 
               <div className="form-actions">
                 <button className="primary-button" type="submit">
@@ -167,49 +243,19 @@ function ProductsContent() {
           <div className="list-stack">
             {products.map((product) => (
               <ProductCard
-                key={product.product_id}
-                product={product}
-                canEdit={canEdit}
-                onEdit={beginEdit}
-                onDelete={handleDelete}
-              />
+  key={product.product_id}
+  product={product}
+  canEdit={canEdit}
+  onEdit={beginEdit}
+  onDelete={handleDelete}
+  onAddToCart={handleAddToCart}
+  onDonate={handleDonate}
+/>
             ))}
           </div>
         </article>
 
-        <article className="card">
-          <div className="card-header">
-            <div>
-              <h2>Categories</h2>
-              <p>Small helper to keep product classification simple.</p>
-            </div>
-          </div>
-
-          {canEdit ? (
-            <form className="inline-form" onSubmit={addCategory}>
-              <input name="category_name" placeholder="New category name" />
-              <button className="primary-button" type="submit">
-                Add
-              </button>
-            </form>
-          ) : null}
-
-          <div className="list-stack">
-            {categories.map((category) => (
-              <div key={category.category_id} className="list-row">
-                <div>
-                  <strong>{category.name}</strong>
-                  <p>{category.products?.length || 0} products</p>
-                </div>
-                {canEdit ? (
-                  <button className="link-button danger" type="button" onClick={() => removeCategory(category.category_id)}>
-                    Delete
-                  </button>
-                ) : null}
-              </div>
-            ))}
-          </div>
-        </article>
+        
       </section>
     </Layout>
   );

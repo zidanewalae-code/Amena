@@ -10,15 +10,13 @@ async function bootstrap() {
     await sequelize.authenticate();
     console.log(`${sequelize.getDialect()} connection successful.`);
 
-    await sequelize.sync();
-    console.log('Sequelize models synchronized.');
+await sequelize.sync({ force: false });    console.log('Sequelize models synchronized with schema alterations.');
 
     app.listen(PORT, () => {
       console.log(`Amena backend running on port ${PORT}`);
     });
   } catch (error) {
-    console.error('Server startup failed:', error.message);
-    process.exit(1);
+console.error('Server startup failed:', error);    process.exit(1);
   }
 }
 

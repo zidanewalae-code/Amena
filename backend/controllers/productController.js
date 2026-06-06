@@ -30,8 +30,26 @@ async function getProductById(req, res) {
 async function createProduct(req, res) {
   try {
     const { name, quantity, expiration_date, category_id } = req.body;
-    if (!name || quantity === undefined) return res.status(400).json({ message: 'name and quantity are required' });
-    return res.status(201).json(await Product.create({ name, quantity, expiration_date, category_id }));
+
+if (!name || quantity === undefined) {
+  return res.status(400).json({
+    message: 'name and quantity are required'
+  });
+}
+
+const image = req.file
+  ? `/uploads/${req.file.filename}`
+  : null;
+
+return res.status(201).json(
+  await Product.create({
+    name,
+    quantity,
+    expiration_date,
+    category_id,
+    image
+  })
+);
   } catch (error) {
     return res.status(500).json({ message: 'Failed to create product', error: error.message });
   }
@@ -42,10 +60,15 @@ async function updateProduct(req, res) {
     const product = await Product.findByPk(req.params.id);
     if (!product) return res.status(404).json({ message: 'Product not found' });
     const { name, quantity, expiration_date, category_id } = req.body;
+
+const image = req.file
+  ? `/uploads/${req.file.filename}`
+  : undefined;
     if (name !== undefined) product.name = name;
     if (quantity !== undefined) product.quantity = quantity;
     if (expiration_date !== undefined) product.expiration_date = expiration_date;
     if (category_id !== undefined) product.category_id = category_id;
+    if (image !== undefined) product.image = image;
     await product.save();
     return res.status(200).json(product);
   } catch (error) {

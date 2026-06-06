@@ -560,8 +560,61 @@ function DashboardContent({ role }) {
                               <strong>{getSectionItemTitle(section.key, item)}</strong>
                               <span className={`status-chip tone-${badge.tone}`}>{badge.label}</span>
                             </div>
-                            <p>{section.summary(item)}</p>
-                          </div>
+<p>{section.summary(item)}</p>
+
+{section.key === 'orders' ? (
+  <div style={{ marginTop: '10px' }}>
+    <p><strong>Customer:</strong> {item.customer_name || '-'}</p>
+    <p><strong>Phone:</strong> {item.phone || '-'}</p>
+    <p><strong>Address:</strong> {item.address || '-'}</p>
+    <p><strong>City:</strong> {item.city || '-'}</p>
+    <p><strong>Organization:</strong> {item.organization?.name || item.organization?.user_id || item.organization_id || '-'}</p>
+    <p><strong>Payment:</strong> {item.payment_method || '-'}</p>
+    <p><strong>Order status:</strong> {item.status || 'pending'}</p>
+    <p>
+      <strong>Delivery earnings:</strong>
+      {' '}
+      10%
+    </p>
+    <p>
+      <strong>Products:</strong>{' '}
+      {(() => {
+        const orderProducts = typeof item.products === 'string'
+          ? JSON.parse(item.products || '[]')
+          : item.products || [];
+
+        return orderProducts.length
+          ? orderProducts.map((product, idx) => (
+              <span key={idx}>
+                {product.name || `#${product.product_id || 'unknown'}`} x{product.quantity || 1}
+                {idx < orderProducts.length - 1 ? ', ' : ''}
+              </span>
+            ))
+          : 'None';
+      })()}
+    </p>
+
+    {role === 'delivery_person' && item.status === 'pending' ? (
+      <button
+        className="primary-button"
+        onClick={async () => {
+          try {
+            await api.put(`/orders/${item.order_id}`, {
+              status: 'assigned',
+              delivery_person_id: user.user_id
+            });
+
+            loadAll();
+          } catch (error) {
+            alert(error.response?.data?.message || 'Unable to accept delivery');
+          }
+        }}
+      >
+        Accept delivery
+      </button>
+    ) : null}
+  </div>
+) : null}                          </div>
                         </div>
                       );
                     })}

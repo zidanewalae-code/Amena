@@ -1,4 +1,4 @@
-const { sequelize, Order, Purchase, DeliveryPerson, Donator, Payment } = require('../models');
+const { sequelize, Order, Purchase, DeliveryPerson, Donator, Payment, User } = require('../models');
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -9,7 +9,8 @@ async function loadOrder(orderId) {
     include: [
       { model: Purchase, as: 'purchase', include: [{ model: Donator, as: 'donator' }] },
       { model: DeliveryPerson, as: 'deliveryPerson' },
-      { model: Payment, as: 'payment' }
+      { model: Payment, as: 'payment' },
+      { model: User, as: 'organization', attributes: ['user_id', 'name', 'email', 'phone'] }
     ]
   });
 }
@@ -38,7 +39,8 @@ async function getAllOrders(req, res) {
     const include = [
       { model: Purchase, as: 'purchase', include: [{ model: Donator, as: 'donator' }] },
       { model: DeliveryPerson, as: 'deliveryPerson' },
-      { model: Payment, as: 'payment' }
+      { model: Payment, as: 'payment' },
+      { model: User, as: 'organization', attributes: ['user_id', 'name', 'email', 'phone'] }
     ];
 
     let orders = [];
@@ -56,7 +58,8 @@ async function getAllOrders(req, res) {
             include: [{ model: Donator, as: 'donator' }]
           },
           { model: DeliveryPerson, as: 'deliveryPerson' },
-          { model: Payment, as: 'payment' }
+          { model: Payment, as: 'payment' },
+          { model: User, as: 'organization', attributes: ['user_id', 'name', 'email', 'phone'] }
         ]
       });
     } else if (req.user.role === 'delivery_person') {
@@ -94,21 +97,49 @@ async function createOrder(req, res) {
       return res.status(403).json({ message: 'Forbidden: role not allowed' });
     }
 
-    const { donor_id, total_price, status, delivery_address, order_date, delivery_person_id, purchase_id } = req.body;
-    const ownerDonorId = req.user.role === 'donator' ? req.user.user_id : donor_id;
+    const {
+      donor_id,
+      total_price,
+      status,
+      delivery_address,
+      order_date,
+      delivery_person_id,
+      purchase_id,
+      customer_name,
+      phone,
+      address,
+      city,
+      payment_method,
+      organization_id,
+      products
+    } = req.body;
 
-    if (!ownerDonorId || !delivery_address) {
-      return res.status(400).json({ message: 'donor_id and delivery_address are required' });
+    const ownerDonorId = req.user.role === 'donator' ? req.user.user_id : donor_id;
+    const deliveryAddress = delivery_address || address;
+
+    if (!ownerDonorId) {
+      return res.status(400).json({ message: 'donor_id is required' });
+    }
+
+    if (!customer_name || !phone || !address || !city || !payment_method || !organization_id || !Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({
+        message: 'customer_name, phone, address, city, payment_method, organization_id and products are required'
+      });
     }
 
     const order = await sequelize.transaction(async (transaction) => {
+
       let purchase = null;
 
       if (purchase_id) {
         purchase = await Purchase.findByPk(purchase_id, { transaction });
       } else {
         purchase = await Purchase.create(
-          { date: order_date || today(), total_price: total_price || 0, donor_id: ownerDonorId },
+          {
+            date: order_date || today(),
+            total_price: total_price || 0,
+            donor_id: ownerDonorId
+          },
           { transaction }
         );
       }
@@ -120,21 +151,31 @@ async function createOrder(req, res) {
       return Order.create(
         {
           status: status || 'pending',
-          delivery_address,
+          delivery_address: deliveryAddress,
           order_date: order_date || today(),
           purchase_id: purchase.purchase_id,
-          delivery_person_id: delivery_person_id || null
+          delivery_person_id: delivery_person_id || null,
+          customer_name,
+          phone,
+          address,
+          city,
+          payment_method,
+          organization_id,
+          products: JSON.stringify(products || [])
         },
         { transaction }
       );
     });
 
     return res.status(201).json(await loadOrder(order.order_id));
+
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to create order', error: error.message });
+    return res.status(500).json({
+      message: 'Failed to create order',
+      error: error.message
+    });
   }
 }
-
 async function updateOrder(req, res) {
   try {
     const order = await Order.findByPk(req.params.id);

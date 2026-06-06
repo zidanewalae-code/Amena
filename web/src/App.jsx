@@ -14,7 +14,8 @@ import HistoryPage from './pages/HistoryPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { getDashboardPath, getPageAccess, roles } from './lib/access';
 import { useAuth } from './lib/auth';
-
+import CheckoutPage from './pages/CheckoutPage';
+import CartPage from './pages/CartPage';
 function DashboardRedirect() {
   const { user } = useAuth();
 
@@ -25,16 +26,10 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/login" element={<LoginPage />} />
+<Route path="/checkout" element={<CheckoutPage />} />      <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route
-        path="/products"
-        element={
-          <ProtectedRoute roles={getPageAccess('products')}>
-            <ProductsPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/products" element={<ProductsPage />} />
+<Route path="/cart" element={<CartPage />} />
       <Route
         path="/donations"
         element={
@@ -43,7 +38,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      <Route
+      <Route 
         path="/orders"
         element={
           <ProtectedRoute roles={getPageAccess('orders')}>

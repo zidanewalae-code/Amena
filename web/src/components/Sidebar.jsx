@@ -19,6 +19,18 @@ export default function Sidebar({ publicLinks, dashboardLinks, user, isAuthed, o
           </NavLink>
         ))}
       </nav>
+      <nav className="nav-group">
+  <span className="nav-label">Shopping</span>
+
+  <NavLink
+    to="/cart"
+    className={({ isActive }) =>
+      `nav-link ${isActive ? 'active' : ''}`
+    }
+  >
+    Cart
+  </NavLink>
+</nav>
 
       <nav className="nav-group">
         <span className="nav-label">Dashboards</span>

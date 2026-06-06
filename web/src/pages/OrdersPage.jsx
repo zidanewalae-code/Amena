@@ -157,31 +157,80 @@ function OrdersContent() {
         {message ? <p className="inline-message error">{message}</p> : null}
 
         <div className="list-stack spaced">
-          {orders.map((order) => (
-            <article key={order.order_id} className="list-card">
-              <div>
-                <strong>Order #{order.order_id}</strong>
-                <p>
-                  Status: {order.status || '-'} | Address: {order.delivery_address || '-'} | Date: {order.order_date || '-'}
-                </p>
-                <span className="meta-line">
-                  Purchase: {order.purchase_id || '-'} | Delivery person: {order.delivery_person_id || '-'}
+   {orders.map((order) => {
+  const parsedProducts =
+    typeof order.products === 'string'
+      ? JSON.parse(order.products || '[]')
+      : order.products || [];
+
+  return (
+    <article key={order.order_id} className="list-card">
+      <div>
+        <strong>Order #{order.order_id}</strong>
+
+        <p>
+          Status: {order.status || '-'} | Address:{' '}
+          {order.delivery_address || '-'} | Date:{' '}
+          {order.order_date || '-'}
+        </p>
+
+        <p>
+          <strong>Customer:</strong> {order.customer_name || '-'}
+        </p>
+
+        <p>
+          <strong>Phone:</strong> {order.phone || '-'}
+        </p>
+
+        <p>
+          <strong>Organization:</strong>{' '}
+          {order.organization?.name || order.organization_id || '-'}
+        </p>
+
+        <p>
+          <strong>Products:</strong>{' '}
+          {parsedProducts.length
+            ? parsedProducts.map((product, idx) => (
+                <span key={idx}>
+                  {product.name || `#${product.product_id || 'unknown'}`} x
+                  {product.quantity || 1}
+                  {idx < parsedProducts.length - 1 ? ', ' : ''}
                 </span>
-              </div>
-              {canEdit ? (
-                <div className="row-actions">
-                  <button className="link-button" type="button" onClick={() => beginEdit(order)}>
-                    {statusOnly ? 'Update status' : 'Edit'}
-                  </button>
-                  {!statusOnly ? (
-                    <button className="link-button danger" type="button" onClick={() => handleDelete(order.order_id)}>
-                      Delete
-                    </button>
-                  ) : null}
-                </div>
-              ) : null}
-            </article>
-          ))}
+              ))
+            : 'None'}
+        </p>
+
+        <span className="meta-line">
+          Purchase: {order.purchase_id || '-'} | Delivery person:{' '}
+          {order.delivery_person_id || '-'}
+        </span>
+      </div>
+
+      {canEdit ? (
+        <div className="row-actions">
+          <button
+            className="link-button"
+            type="button"
+            onClick={() => beginEdit(order)}
+          >
+            {statusOnly ? 'Update status' : 'Edit'}
+          </button>
+
+          {!statusOnly ? (
+            <button
+              className="link-button danger"
+              type="button"
+              onClick={() => handleDelete(order.order_id)}
+            >
+              Delete
+            </button>
+          ) : null}
+        </div>
+            ) : null}
+    </article>
+  );
+})}
+
         </div>
       </section>
     </Layout>

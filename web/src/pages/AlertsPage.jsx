@@ -17,13 +17,16 @@ function AlertsContent() {
   const [message, setMessage] = useState('');
 
   async function loadAlerts() {
-    try {
-      const response = await api.get('/alerts');
-      setAlerts(response.data || []);
-    } catch (error) {
-      setMessage(error.response?.data?.message || 'Unable to load alerts');
-    }
+  try {
+    const response = await api.get('/alerts');
+
+    console.log(response.data);
+
+    setAlerts(response.data || []);
+  } catch (error) {
+    setMessage(error.response?.data?.message || 'Unable to load alerts');
   }
+}
 
   useEffect(() => {
     loadAlerts();

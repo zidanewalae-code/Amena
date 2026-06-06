@@ -5,8 +5,12 @@ const { getAllUsers, getUserById, updateUser, updateUserRole, deleteUser } = req
 
 const router = express.Router();
 
-router.get('/', authMiddleware, roleMiddleware(['admin']), getAllUsers);
-router.get('/:id', authMiddleware, getUserById);
+router.get(
+  '/',
+  authMiddleware,
+  roleMiddleware(['admin', 'donator', 'organization']),
+  getAllUsers
+);router.get('/:id', authMiddleware, getUserById);
 router.patch('/:id', authMiddleware, updateUser);
 router.patch('/:id/role', authMiddleware, roleMiddleware(['admin']), updateUserRole);
 router.delete('/:id', authMiddleware, roleMiddleware(['admin']), deleteUser);
